@@ -15,12 +15,15 @@ def resize_img(img, size=256):
 
 
 def histogram_equalization(img):
-    # Convert to HSV
-    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    img_hsv[:, :, 2] = cv2.equalizeHist(img_hsv[:, :, 2])
+    # Convert to YCrCb
+    img_ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+
+    # Apply CLAHE method adapted to contrast on Y channel
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    img_ycrcb[:, :, 0] = clahe.apply(img_ycrcb[:, :, 0])
 
     # Convert back to RGB
-    return cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
+    return cv2.cvtColor(img_ycrcb, cv2.COLOR_YCrCb2BGR)
 
 
 def preprocess(img, resize=256):

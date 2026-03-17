@@ -8,7 +8,7 @@ from code.shape import detect_shapes
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DIR = os.path.join(BASE_DIR, '..', 'DATA')
 
-img = preprocess(cv2.imread(os.path.join(DIR, '041_0000.png')))
+img = preprocess(cv2.imread(os.path.join(DIR, '040_0001.png')))
 
 cv2.imshow('img', img)
 

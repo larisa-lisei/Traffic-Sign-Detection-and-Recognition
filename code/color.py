@@ -5,9 +5,7 @@ import numpy as np
 def morphology(mask):
     kernel = np.ones((5, 5), np.uint8)
 
-    # fill holes
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    # remove noise
+    # remove noise (erosion + dilation)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
 
     return mask
@@ -33,8 +31,8 @@ def get_color_masks(img):
 
 
     # MASK
-    mask_red = cv2.inRange(img_hsv, lower_red1, upper_red1) | \
-               cv2.inRange(img_hsv, lower_red2, upper_red2)
+    mask_red = (cv2.inRange(img_hsv, lower_red1, upper_red1) |
+                cv2.inRange(img_hsv, lower_red2, upper_red2))
     mask_yellow = cv2.inRange(img_hsv, lower_yellow, upper_yellow)
     mask_blue = cv2.inRange(img_hsv, lower_blue, upper_blue)
 
