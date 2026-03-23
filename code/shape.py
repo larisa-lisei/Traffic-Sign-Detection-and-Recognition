@@ -1,10 +1,7 @@
-from random import random
-
 import cv2
 import numpy as np
-import math
 
-from numpy import integer
+from code.descriptors import extract_features_from_circle, extract_features_from_contour
 
 
 # -------------------- CONTOURS --------------------
@@ -62,30 +59,37 @@ def classify_contour(cnt):
 
     if v == 8:
         return "octagon"
-
-    print("Unknown shape")
     return None
 
 
 # -------------------- DETECT SHAPES --------------------
 def detect_shapes(img, masks):
     output = img.copy()
+    all_features = []
 
     for color, mask in masks.items():
 
         # circle detection using Hough transform
         circles = detect_circle(mask, color)
 
-        detected_circle_centers = []
         if circles is not None:
             circles = np.round(circles[0, :]).astype(int)
 
             for (x, y, r) in circles:
-                print(f"{color} circle (Hough method)")
-
                 cv2.circle(output, (x, y), r, (0, 255, 0), 2)
 
-                detected_circle_centers.append((x, y, r))
+                result = extract_features_from_circle(img, x, y ,r)
+                if result is None:
+                    continue
+
+                features, roi = result
+
+                all_features.append({
+                    "shape": 'circle',
+                    "color": color,
+                    "features": features,
+                    "roi": roi,
+                })
 
 
         # contour based detection for polygons
@@ -96,9 +100,20 @@ def detect_shapes(img, masks):
             if shape is None:
                 continue
 
-            print(f"{color} {shape}")
+            result = extract_features_from_contour(img, cnt)
+            if result is None:
+                continue
+
+            features, roi = result
+
+            all_features.append({
+                "shape": shape,
+                "color": color,
+                "features": features,
+                "roi": roi,
+            })
 
             # ---------------- DRAW ----------------
             cv2.drawContours(output, [cnt], -1, (0, 255, 0), 2)
 
-    return output
+    return output, all_features
