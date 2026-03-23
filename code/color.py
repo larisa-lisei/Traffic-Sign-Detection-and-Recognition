@@ -15,10 +15,10 @@ def get_color_masks(img):
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # RED
-    lower_red1 = np.array([0, 70, 50])
+    lower_red1 = np.array([0, 40, 20])
     upper_red1 = np.array([10, 255, 255])
 
-    lower_red2 = np.array([170, 70, 50])
+    lower_red2 = np.array([170, 40, 20])
     upper_red2 = np.array([180, 255, 255])
 
     # YELLOW
