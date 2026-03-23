@@ -83,7 +83,7 @@ def extract_roi_features(roi):
     # concatenate all
     features = np.concatenate([hu, hog, color])
 
-    return features, roi
+    return features
 
 
 def extract_features_from_contour(img, cnt):

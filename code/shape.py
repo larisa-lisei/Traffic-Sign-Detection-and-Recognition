@@ -3,21 +3,30 @@ import numpy as np
 
 from code.descriptors import extract_features_from_circle, extract_features_from_contour
 
+SHAPE_MAP = {
+    "circle":    [1, 0, 0, 0],
+    "triangle":  [0, 1, 0, 0],
+    "quadrilateral": [0, 0, 1, 0],
+    "octagon":   [0, 0, 0, 1],
+}
+
+COLOR_MAP = {
+    "red":    [1, 0, 0, 0],
+    "blue":   [0, 1, 0, 0],
+    "yellow": [0, 0, 1, 0]
+}
+
+def encode_shape(shape):
+    return np.array(SHAPE_MAP.get(shape, [0, 0, 0, 0]), dtype=np.float32)
+
+def encode_color(color):
+    return np.array(COLOR_MAP.get(color, [0, 0, 0, 0]), dtype=np.float32)
 
 # -------------------- CONTOURS --------------------
 def find_contours(mask):
     #external contours
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return contours
-
-# -------------------- ANGLE --------------------
-def angle_cos(p0, p1, p2):
-    d1 = p0 - p1
-    d2 = p2 - p1
-
-    # cos(a) = (d1 * d2) / (norm(d1) * norm(d2))
-    return abs(np.dot(d1, d2) / (np.linalg.norm(d1) * np.linalg.norm(d2) + 1e-10))
-
 
 # -------------------- HOUGH TRANSFORM CIRCLES --------------------
 def detect_circle(mask, color):
@@ -60,7 +69,6 @@ def classify_contour(cnt):
     if v == 8:
         return "octagon"
     return None
-
 
 # -------------------- DETECT SHAPES --------------------
 def detect_shapes(img, masks):
