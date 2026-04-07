@@ -3,7 +3,8 @@ import os
 import cv2
 import numpy as np
 
-from code import preprocess, get_color_masks
+from code.preprocessing import preprocess
+from code.color import get_color_masks
 from code.descriptors import extract_features_from_circle, extract_features_from_contour, hu_moments, extract_roi
 
 SHAPE_MAP = {
@@ -30,11 +31,26 @@ def load_templates(template_dir):
 
         img = preprocess(cv2.imread(path))
         masks = get_color_masks(img)
-        contour = find_contours(masks["red"])
+        contours = find_contours(masks["red"])
+        cnt = max(contours, key=cv2.contourArea)
 
-        templates[label] = hu_moments(extract_roi(img,contour))
+        templates[label] = hu_moments(extract_roi(img,cnt))
     return templates
 
+def match_shape_hu(roi, templates):
+    hu = hu_moments(roi)
+
+    best_label = None
+    best_score = float("inf")
+
+    for label, t_hu in templates.items():
+        score = np.linalg.norm(hu - t_hu) # eucl distance
+
+        if score < best_score:
+            best_score = score
+            best_label = label
+
+    return best_label, best_score
 
 def encode_shape(shape):
     return np.array(SHAPE_MAP.get(shape, [0, 0, 0, 0]), dtype=np.float32)

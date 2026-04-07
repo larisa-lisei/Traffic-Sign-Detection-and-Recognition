@@ -12,7 +12,7 @@ DIR = os.path.join(BASE_DIR, '..', 'DATA')
 MODEL = os.path.join(BASE_DIR, 'trained_svm.xml')
 
 TRAIN_DIR = os.path.join(DIR, 'TRAIN')
-HU_TRAIN_DIR = os.path.join(DIR, 'HU_TRAIN')
+HU_TRAIN_DIR = os.path.join(DIR, 'Hu_moments_training')
 
 '''
 if not os.path.exists(MODEL):
@@ -39,7 +39,7 @@ else:
 
     classification_error(y_test, predicted)
 '''
-'''
+
 img = preprocess(cv2.imread(os.path.join(TRAIN_DIR, '22/020_1_0001.png')))
 
 cv2.imshow('img', img)
@@ -57,7 +57,3 @@ for i, item in enumerate(features):
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-'''
-
-templates = load_templates(HU_TRAIN_DIR)
-print(templates)
