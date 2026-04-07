@@ -4,7 +4,7 @@ import cv2
 from code.color import get_color_masks
 from code.model import collect_data, train_svm, predict_svm, load_svm, classification_error
 from code.preprocessing import preprocess
-from code.shape import detect_shapes
+from code.shape import detect_shapes, load_templates
 from sklearn.model_selection import train_test_split
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -12,7 +12,9 @@ DIR = os.path.join(BASE_DIR, '..', 'DATA')
 MODEL = os.path.join(BASE_DIR, 'trained_svm.xml')
 
 TRAIN_DIR = os.path.join(DIR, 'TRAIN')
+HU_TRAIN_DIR = os.path.join(DIR, 'HU_TRAIN')
 
+'''
 if not os.path.exists(MODEL):
     x, y = collect_data(TRAIN_DIR)
     x_train, x_test, y_train, y_test = train_test_split(
@@ -36,9 +38,9 @@ else:
             print(f"real={real}, pred={pred}")
 
     classification_error(y_test, predicted)
-
 '''
-img = preprocess(cv2.imread(os.path.join(TRAIN_DIR, '003_000.jpg')))
+'''
+img = preprocess(cv2.imread(os.path.join(TRAIN_DIR, '22/020_1_0001.png')))
 
 cv2.imshow('img', img)
 
@@ -57,3 +59,5 @@ cv2.waitKey(0)
 cv2.destroyAllWindows()
 '''
 
+templates = load_templates(HU_TRAIN_DIR)
+print(templates)

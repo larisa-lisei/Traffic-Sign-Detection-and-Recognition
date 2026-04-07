@@ -1,7 +1,10 @@
+import os
+
 import cv2
 import numpy as np
 
-from code.descriptors import extract_features_from_circle, extract_features_from_contour
+from code import preprocess, get_color_masks
+from code.descriptors import extract_features_from_circle, extract_features_from_contour, hu_moments, extract_roi
 
 SHAPE_MAP = {
     "circle":    [1, 0, 0, 0],
@@ -15,6 +18,23 @@ COLOR_MAP = {
     "blue":   [0, 1, 0, 0],
     "yellow": [0, 0, 1, 0]
 }
+
+def load_templates(template_dir):
+    templates = {}
+    for fname in os.listdir(template_dir):
+        if not fname.endswith((".png", ".jpg")):
+            continue
+
+        label = os.path.splitext(fname)[0]  # "circle.png" → "circle"
+        path = os.path.join(template_dir, fname)
+
+        img = preprocess(cv2.imread(path))
+        masks = get_color_masks(img)
+        contour = find_contours(masks["red"])
+
+        templates[label] = hu_moments(extract_roi(img,contour))
+    return templates
+
 
 def encode_shape(shape):
     return np.array(SHAPE_MAP.get(shape, [0, 0, 0, 0]), dtype=np.float32)
