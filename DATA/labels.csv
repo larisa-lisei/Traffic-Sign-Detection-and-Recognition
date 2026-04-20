@@ -1,0 +1,44 @@
+ClassId,Name,Shape
+0,Speed limit (5km/h),circle
+1,Speed limit (15km/h),circle
+2,Speed limit (30km/h),circle
+3,Speed limit (40km/h),circle
+4,Speed limit (50km/h),circle
+5,Speed limit (60km/h),circle
+6,Speed limit (70km/h),circle
+7,Speed limit (80km/h),circle
+8,No left turn,circle
+9,No right turn,circle
+10,No Uturn,circle
+11,No entry,circle
+12,No vehicles,circle
+13,No overtaking,circle
+14,No waiting,circle
+15,No stopping,circle
+16,Ahead only,circle
+17,Turn left ahead,circle
+18,Turn right ahead,circle
+19,Turn left,circle
+20,Turn right,circle
+21,Go left or straight,circle
+22,Go right or straight,circle
+23,Keep left,circle
+24,Keep right,circle
+25,Roundabout,circle
+26,One way traffic,square
+27,Zebra crossing,quadrilateral
+28,Priority over oncoming vehicles,quadrilateral
+29,Bend to left,triangle
+30,Bend to right,triangle
+31,Double bend first to left,triangle
+32,Double bend first to right,triangle
+33,Two way traffic,triangle
+34,Roundabout ahead,triangle
+35,Road narrows on left,triangle
+36,Road narrows on right,triangle
+37,Road narrows on both sides,triangle
+38,Train crossing,triangle
+39,Give way,triangle
+40,Stop,octagon
+41,Priority road,quadrilateral
+42,End of priority road,quadrilateral
