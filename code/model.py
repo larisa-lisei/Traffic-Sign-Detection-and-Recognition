@@ -1,7 +1,6 @@
 import os
 import cv2
 import numpy as np
-import pickle
 
 from code.color import get_color_masks
 from code.preprocessing import preprocess

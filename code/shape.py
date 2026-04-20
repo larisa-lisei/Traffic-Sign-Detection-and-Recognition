@@ -1,11 +1,13 @@
 import os
+import pickle
 
 import cv2
 import numpy as np
 
 from code.preprocessing import preprocess
 from code.color import get_color_masks
-from code.descriptors import extract_features_from_circle, extract_features_from_contour, hu_moments, extract_roi
+from code.descriptors import extract_features_from_circle, extract_features_from_contour, hu_moments, extract_roi, \
+    hu_moments_contour
 
 SHAPE_MAP = {
     "circle":    [1, 0, 0, 0],
@@ -20,8 +22,7 @@ COLOR_MAP = {
     "yellow": [0, 0, 1, 0]
 }
 
-def load_templates(template_dir):
-    templates = {}
+def create_templates(template_dir, output_dir):
     for fname in os.listdir(template_dir):
         if not fname.endswith((".png", ".jpg")):
             continue
@@ -34,17 +35,39 @@ def load_templates(template_dir):
         contours = find_contours(masks["red"])
         cnt = max(contours, key=cv2.contourArea)
 
-        templates[label] = hu_moments(extract_roi(img,cnt))
+        debug_img = cv2.cvtColor(masks["red"], cv2.COLOR_GRAY2BGR)
+        cv2.drawContours(debug_img, [cnt], -1, (0, 255, 0), 3)
+
+        cv2.imshow(label, debug_img)
+
+        template = hu_moments_contour(cnt)
+        save_path = os.path.join(output_dir, f'{label}.pkl')
+
+        with open(save_path, "wb") as f:
+            pickle.dump(cnt, f)
+
+def load_templates(dir):
+    templates = {}
+
+    for fname in os.listdir(dir):
+        if not fname.endswith(".pkl"):
+            continue
+
+        label = os.path.splitext(fname)[0]
+        path = os.path.join(dir, fname)
+
+        with open(path, "rb") as f:
+            templates[label] = pickle.load(f)
+
     return templates
 
-def match_shape_hu(roi, templates):
-    hu = hu_moments(roi)
-
+def match_shape_hu(hu, templates):
     best_label = None
     best_score = float("inf")
 
     for label, t_hu in templates.items():
-        score = np.linalg.norm(hu - t_hu) # eucl distance
+        score = cv2.matchShapes(hu, t_hu, cv2.CONTOURS_MATCH_I1, 0)
+        print(f"  vs {label}: {score:.4f}")
 
         if score < best_score:
             best_score = score
@@ -158,6 +181,48 @@ def detect_shapes(img, masks):
             })
 
             # ---------------- DRAW ----------------
+            cv2.drawContours(output, [cnt], -1, (0, 255, 0), 2)
+
+    return output, all_features
+
+
+def detect_shapes2(img, masks, templates, threshold=0.5):
+    output = img.copy()
+    all_features = []
+
+    for color, mask in masks.items():
+        contours = find_contours(mask)
+
+        i = 0
+        for cnt in contours:
+            i = i + 1
+            #hu = hu_moments_contour(cnt)
+            shape, score = match_shape_hu(cnt, templates)
+
+            debug_img = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+            cv2.drawContours(debug_img, [cnt], -1, (0, 255, 0), 3)
+
+            cv2.imshow(f'{color} {i}', debug_img)
+
+            if score > threshold:
+                print(f'Score is too big on {color}: {score:.4f}')
+                continue
+
+            result = extract_features_from_contour(img, cnt)
+            if result is None:
+                continue
+
+            features, roi = result
+
+            all_features.append({
+                "shape": shape,
+                "color": color,
+                "features": features,
+                "roi": roi,
+                "score": score  # Util pentru debugging
+            })
+
+            # Desenăm pe imagine
             cv2.drawContours(output, [cnt], -1, (0, 255, 0), 2)
 
     return output, all_features

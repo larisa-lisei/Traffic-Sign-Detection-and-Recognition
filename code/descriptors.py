@@ -1,3 +1,5 @@
+import os
+
 import cv2
 import numpy as np
 
@@ -39,6 +41,12 @@ def extract_circle_roi(img, x, y, r, padding=5):
     return cv2.resize(roi, (64, 64))
 
 
+def hu_moments_contour(cnt):
+    moments = cv2.moments(cnt)
+    hu = cv2.HuMoments(moments).flatten()
+    hu = -np.sign(hu) * np.log10(np.abs(hu) + 1e-10)
+    return hu
+
 def hu_moments(roi):
     gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
 
@@ -47,7 +55,7 @@ def hu_moments(roi):
     hu = cv2.HuMoments(moments).flatten()
 
     # normalize so the values are not dominated by the first moment (largest)
-    hu = np.sign(hu) * np.log10(np.abs(hu) + 1e-10)
+    hu = -np.sign(hu) * np.log10(np.abs(hu) + 1e-10)
 
     return hu
 
