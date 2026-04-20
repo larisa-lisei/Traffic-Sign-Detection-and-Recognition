@@ -1,6 +1,8 @@
+import csv
 import os
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 
 from code.color import get_color_masks
 from code.preprocessing import preprocess
@@ -38,7 +40,7 @@ def collect_data(data_dir):
         label = int(folder_name)
 
         for fname in os.listdir(class_dir):
-            if not fname.lower().endswith((".jpg", ".jpeg", ".png")):
+            if not fname.lower().endswith(("rectangle.jpg", ".jpeg", ".png")):
                 continue
 
             img_path = os.path.join(class_dir, fname)
@@ -91,6 +93,51 @@ def predict_svm(svm, x):
 
     return results.flatten().astype(int)
 
+def load_class_shapes(csv_path):
+    class_to_shape = {}
+
+    with open(csv_path, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            class_id = int(row['ClassId'])
+            shape = row['Shape']
+            class_to_shape[class_id] = shape
+
+    return class_to_shape
+
+def confusion_matrix(y_true, y_pred, num_classes):
+    cm = np.zeros((num_classes, num_classes), dtype=int)
+
+    for t, p in zip(y_true, y_pred):
+        cm[t][p] += 1
+
+    return cm
+
+def plot_confusion_matrix(cm, class_names=None):
+    row_sums = cm.sum(axis=1, keepdims=True)
+
+    # Avoid division by zero
+    row_sums[row_sums == 0] = 1
+
+    cm = cm.astype('float') / row_sums
+
+    plt.figure(figsize=(10, 8))
+    plt.imshow(cm, interpolation='nearest')
+    plt.title("Confusion Matrix")
+    plt.colorbar()
+
+    tick_marks = np.arange(len(cm))
+    if class_names is not None:
+        plt.xticks(tick_marks, class_names, rotation=45)
+        plt.yticks(tick_marks, class_names)
+    else:
+        plt.xticks(tick_marks)
+        plt.yticks(tick_marks)
+
+    plt.ylabel("True label")
+    plt.xlabel("Predicted label")
+    plt.tight_layout()
+    plt.show()
 
 def classification_error(y_test, y_pred):
     hits = np.sum(y_pred == y_test)
@@ -107,3 +154,25 @@ def classification_error(y_test, y_pred):
     print("Accuracy:", accuracy)
     print("Classification error:", error_rate)
     print("MSE:", mse)
+
+
+def accuracy_per_shape(y_true, y_pred, class_to_shape):
+    shape_stats = {}
+
+    for real, pred in zip(y_true, y_pred):
+        shape = class_to_shape[real]
+
+        if shape not in shape_stats:
+            shape_stats[shape] = {"correct": 0, "total": 0}
+
+        shape_stats[shape]["total"] += 1
+
+        if real == pred:
+            shape_stats[shape]["correct"] += 1
+
+    for shape, stats in shape_stats.items():
+        total = stats["total"]
+        correct = stats["correct"]
+        acc = correct / total if total > 0 else 0
+
+        print(f"{shape}: {acc:.4f} ({correct}/{total})")
