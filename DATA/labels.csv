@@ -13,7 +13,7 @@ ClassId,Name,Shape
 11,No entry,circle
 12,No vehicles,circle
 13,No overtaking,circle
-14,No waiting,circle
+14,No parking,circle
 15,No stopping,circle
 16,Ahead only,circle
 17,Turn left ahead,circle
@@ -38,7 +38,7 @@ ClassId,Name,Shape
 36,Road narrows on right,triangle
 37,Road narrows on both sides,triangle
 38,Train crossing,triangle
-39,Give way,triangle
+39,Yield,triangle
 40,Stop,octagon
 41,Priority road,quadrilateral
 42,End of priority road,quadrilateral
