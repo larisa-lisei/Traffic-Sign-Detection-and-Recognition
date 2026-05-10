@@ -12,6 +12,7 @@ from code.shape import detect_shapes, find_contours, create_templates, load_temp
 
 
 def main():
+
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DIR = os.path.join(BASE_DIR, '..', 'DATA')
     MODEL = os.path.join(BASE_DIR, 'trained_svm.xml')
@@ -20,6 +21,7 @@ def main():
     HU_TRAIN_DIR = os.path.join(DIR, 'Hu_moments_training')
     HU_OUTPUT_DIR = os.path.join(DIR, 'ShapeTemplates')
 
+    '''
     x, y = collect_data(TRAIN_DIR)
     x_train, x_test, y_train, y_test = train_test_split(
         x, y, test_size=0.2, random_state=42, shuffle=True
@@ -38,6 +40,7 @@ def main():
     plot_confusion_matrix(cm, classes)
 
     accuracy_per_shape(y_test, predicted, classes)
+    '''
 
     '''
     for real, pred in zip(y_test, predicted):
@@ -47,8 +50,7 @@ def main():
     classification_error(y_test, predicted)
     '''
 
-    '''
-    img = preprocess(cv2.imread(os.path.join(TRAIN_DIR, '22/020_1_0001.png')))
+    img = preprocess(cv2.imread(os.path.join(TRAIN_DIR, '15/15_001.png')))
     
     cv2.imshow('img', img)
     
@@ -56,8 +58,10 @@ def main():
     
     for color, mask in masks.items():
         cv2.imshow(color, mask)
+
+    templates = load_templates(HU_OUTPUT_DIR)
     
-    shape, features = detect_shapes(img, masks)
+    shape, features = detect_shapes2(img, masks, templates)
     cv2.imshow("Shape detection", shape)
     
     for i, item in enumerate(features):
@@ -65,7 +69,7 @@ def main():
     
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    '''
+
 
 if __name__ == '__main__':
     main()
