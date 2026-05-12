@@ -1,12 +1,17 @@
 import csv
 import os
+import random
+
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-from code.color import get_color_masks
 from code.preprocessing import preprocess
 from code.shape import detect_shapes, encode_shape, encode_color
+
+from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
+import pickle
 
 
 # -------------------- SVM SETUP --------------------
@@ -27,71 +32,129 @@ def feature_vector(det):
     return np.concatenate([base_features, shape_features, color_features])
 
 # -------------------- TRAINING --------------------
-def collect_data(data_dir):
-    x, y = [], []
+def collect_data(data_dir, train_ratio=0.8):
+    x_train, y_train = [], []
+    x_test, y_test = [], []
+
+    shape_counts = {}   # ADD THIS
+    skipped = 0
 
     for folder_name in os.listdir(data_dir):
         class_dir = os.path.join(data_dir, folder_name)
 
         if not os.path.isdir(class_dir):
-            print(f"Directory not found: {class_dir}")
             continue
 
         label = int(folder_name)
 
-        for fname in os.listdir(class_dir):
-            if not fname.lower().endswith(("rectangle.jpg", ".jpeg", ".png")):
-                continue
+        # all images from current class
+        files = [
+            f for f in os.listdir(class_dir)
+            if f.lower().endswith((".jpg", ".jpeg", ".png"))
+        ]
 
+        # shuffle class images
+        random.shuffle(files)
+
+        # split index
+        split_idx = int(len(files) * train_ratio)
+
+        train_files = files[:split_idx]
+        test_files = files[split_idx:]
+
+        # ---------------- TRAIN ----------------
+        for fname in train_files:
             img_path = os.path.join(class_dir, fname)
+
             img = cv2.imread(img_path)
 
             if img is None:
                 continue
 
             img = preprocess(img)
-            masks = get_color_masks(img)
-            _, all_features = detect_shapes(img, masks)
+
+            _, all_features = detect_shapes(img)
 
             if not all_features:
                 continue
 
             for det in all_features:
-                x.append(feature_vector(det))
-                y.append(label)
+                x_train.append(feature_vector(det))
+                y_train.append(label)
 
-    x = np.array(x, dtype=np.float32)
-    y = np.array(y, dtype=np.int32)
-    return x, y
+                # ADD THIS
+                s = det["shape"]
+                shape_counts[s] = shape_counts.get(s, 0) + 1
+
+        # ---------------- TEST ----------------
+        for fname in test_files:
+            img_path = os.path.join(class_dir, fname)
+
+            img = cv2.imread(img_path)
+
+            if img is None:
+                continue
+
+            img = preprocess(img)
+
+            _, all_features = detect_shapes(img)
+
+            if not all_features:
+                continue
+
+            for det in all_features:
+                x_test.append(feature_vector(det))
+                y_test.append(label)
+
+        # at the end, before return:
+    print("Detected shape distribution:", shape_counts)
+    print("Skipped images:", skipped)
+
+    return (
+        np.array(x_train, dtype=np.float32),
+        np.array(y_train, dtype=np.int32),
+        np.array(x_test, dtype=np.float32),
+        np.array(y_test, dtype=np.int32)
+    )
 
 
-def train_svm(x, y, model_path="trained_svm.xml", C=1.0, gamma=0.5):
+def train_svm(x, y, model_path="trained_svm.pkl", C=1.0, gamma=0.5):
+    print('Training SVM...')
+
     if len(x) == 0:
         raise ValueError("No training data found.")
 
-    svm = build_svm(C=C, gamma=gamma)
-    svm.train(x, cv2.ml.ROW_SAMPLE, y)
-    svm.save(model_path)
+    unique, counts = np.unique(y, return_counts=True)
+    print("Class distribution:", dict(zip(unique, counts)))
 
-    return svm
+    # normalize features
+    scaler = StandardScaler()
+    x_scaled = scaler.fit_transform(x)
+
+    # class_weight='balanced' automatically handles imbalance
+    svm = SVC(C=C, gamma=gamma, kernel='rbf', class_weight='balanced')
+    svm.fit(x_scaled, y)
+
+    # save both scaler and model together
+    with open(model_path, 'wb') as f:
+        pickle.dump({"svm": svm, "scaler": scaler}, f)
+
+    return svm, scaler
 
 
 # -------------------- GET TRAINED MODEL --------------------
-def load_svm(model_path="trained_svm.xml"):
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model not found: {model_path}")
-    svm = cv2.ml.SVM_load(model_path)
-
-    return svm
+def load_svm(model_path="trained_svm.pkl"):
+    with open(model_path, 'rb') as f:
+        data = pickle.load(f)
+    return data["svm"], data["scaler"]
 
 
-def predict_svm(svm, x):
+def predict_svm(svm, x, scaler=None):
     if x is None or len(x) == 0:
         return []
-
-    _, results = svm.predict(x)
-
-    return results.flatten().astype(int)
+    if scaler is not None:
+        x = scaler.transform(x)
+    return svm.predict(x)
 
 def load_class_shapes(csv_path):
     class_to_shape = {}

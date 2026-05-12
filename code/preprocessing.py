@@ -19,7 +19,7 @@ def histogram_equalization(img):
     img_ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
 
     # Apply CLAHE method adapted to contrast on Y channel
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    clahe = cv2.createCLAHE(clipLimit=1.6, tileGridSize=(4, 4))
     img_ycrcb[:, :, 0] = clahe.apply(img_ycrcb[:, :, 0])
 
     # Convert back to RGB

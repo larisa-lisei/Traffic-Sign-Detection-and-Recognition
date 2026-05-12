@@ -3,7 +3,7 @@ import numpy as np
 
 
 def morphology(mask):
-    kernel = np.ones((5, 5), np.uint8)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
 
     # remove noise (erosion + dilation)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
@@ -15,20 +15,20 @@ def get_color_masks(img):
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # RED
-    lower_red1 = np.array([0, 40, 20])
-    upper_red1 = np.array([10, 255, 255])
+    lower_red1 = np.array([0, 40, 40])
+    upper_red1 = np.array([15, 255, 255])
 
-    lower_red2 = np.array([170, 40, 20])
+    lower_red2 = np.array([155, 25, 40])
     upper_red2 = np.array([180, 255, 255])
+
 
     # YELLOW
     lower_yellow = np.array([15, 100, 100])
     upper_yellow = np.array([35, 255, 255])
 
     # BLUE
-    lower_blue = np.array([100, 100, 50])
-    upper_blue = np.array([130, 255, 255])
-
+    lower_blue = np.array([100, 120, 50])
+    upper_blue = np.array([130, 255, 200])
 
     # MASK
     mask_red = (cv2.inRange(img_hsv, lower_red1, upper_red1) |
