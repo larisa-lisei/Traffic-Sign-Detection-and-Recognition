@@ -14,15 +14,6 @@ from sklearn.preprocessing import StandardScaler
 import pickle
 
 
-# -------------------- SVM SETUP --------------------
-def build_svm(C=1.0, kernel=cv2.ml.SVM_RBF, gamma=0.5, svm_type=cv2.ml.SVM_C_SVC):
-    svm = cv2.ml.SVM_create()
-    svm.setType(svm_type)
-    svm.setKernel(kernel)
-    svm.setC(C)
-    svm.setGamma(gamma)
-    return svm
-
 # -------------------- EXTRACT FEATURES --------------------
 def feature_vector(det):
     base_features = np.array(det["features"], dtype=np.float32)
@@ -117,8 +108,7 @@ def collect_data(data_dir, train_ratio=0.8):
         np.array(y_test, dtype=np.int32)
     )
 
-
-def train_svm(x, y, model_path="trained_svm.pkl", C=1.0, gamma=0.5):
+def train_svm(x, y, model_path="trained_svm.pkl", kernel='rbf', C=100, gamma=0.001):
     print('Training SVM...')
 
     if len(x) == 0:
@@ -127,19 +117,56 @@ def train_svm(x, y, model_path="trained_svm.pkl", C=1.0, gamma=0.5):
     unique, counts = np.unique(y, return_counts=True)
     print("Class distribution:", dict(zip(unique, counts)))
 
-    # normalize features
     scaler = StandardScaler()
     x_scaled = scaler.fit_transform(x)
 
-    # class_weight='balanced' automatically handles imbalance
-    svm = SVC(C=C, gamma=gamma, kernel='rbf', class_weight='balanced')
+    svm = SVC(C=C, gamma=gamma, kernel=kernel, class_weight='balanced')
     svm.fit(x_scaled, y)
 
-    # save both scaler and model together
     with open(model_path, 'wb') as f:
         pickle.dump({"svm": svm, "scaler": scaler}, f)
 
     return svm, scaler
+
+'''
+def train_svm(x, y, model_path="trained_svm.pkl"):
+    print('Training SVM...')
+
+    if len(x) == 0:
+        raise ValueError("No training data found.")
+
+    unique, counts = np.unique(y, return_counts=True)
+    print("Class distribution:", dict(zip(unique, counts)))
+
+    scaler = StandardScaler()
+    x_scaled = scaler.fit_transform(x)
+
+    param_grid = {
+        'C':     [0.1, 1, 10, 100],
+        'gamma': ['scale', 'auto', 0.001, 0.01],
+        'kernel': ['rbf', 'poly', 'linear']
+    }
+
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    grid = GridSearchCV(
+        SVC(class_weight='balanced'),
+        param_grid,
+        cv=cv,
+        scoring='accuracy',
+        verbose=2
+    )
+    grid.fit(x_scaled, y)
+
+    print(f"Best params: {grid.best_params_}")
+    print(f"Best CV accuracy: {grid.best_score_:.4f}")
+
+    best_svm = grid.best_estimator_
+
+    with open(model_path, 'wb') as f:
+        pickle.dump({"svm": best_svm, "scaler": scaler}, f)
+
+    return best_svm, scaler
+'''
 
 
 # -------------------- GET TRAINED MODEL --------------------

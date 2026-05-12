@@ -22,7 +22,7 @@ def main():
     x_train, y_train, x_test, y_test = collect_data(TRAIN_DIR, 0.8)
 
     # Train
-    svm, scaler = train_svm(x_train, y_train, model_path=MODEL, C=1.0, gamma=0.5)
+    svm, scaler = train_svm(x_train, y_train, model_path=MODEL)
 
     # Test
     #svm = load_svm(MODEL)

@@ -5,13 +5,12 @@ import numpy as np
 
 # HOG Parameters
 win_size = (64, 64)
-block_size = (16, 16)
-block_stride = (8, 8)  # 50% overlap between blocks
-cell_size = (8, 8)
+block_size = (32, 32)
+block_stride = (16, 16)  # 50% overlap between blocks
+cell_size = (16, 16)
 nbins = 9
 
-HOG = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, nbins)
-
+HOG = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, nbins) # 324 vals
 
 def extract_roi(img, cnt, padding=5):
     x, y, w, h = cv2.boundingRect(cnt)
@@ -51,7 +50,7 @@ def hu_moments(roi):
     gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
 
     # 7 values invariant to scale, rotation, translation
-    moments = cv2.moments(gray)
+    moments = cv2.moments(gray, binaryImage=False)
     hu = cv2.HuMoments(moments).flatten()
 
     # normalize so the values are not dominated by the first moment (largest)
@@ -69,7 +68,7 @@ def hog_descriptor(roi):
     return features
 
 
-def color_histogram(roi, bins=16):
+def color_histogram(roi, bins=8):
     # histogram on H and S channels only
     hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 
@@ -87,6 +86,9 @@ def extract_roi_features(roi):
     hu  = hu_moments(roi)    # first 7 vals
     hog = hog_descriptor(roi)
     color = color_histogram(roi)  # last 32 vals
+
+    hu = (hu - hu.min()) / (hu.max() - hu.min() + 1e-10)
+    hog = (hog - hog.min()) / (hog.max() - hog.min() + 1e-10)
 
     # concatenate all
     features = np.concatenate([hu, hog, color])

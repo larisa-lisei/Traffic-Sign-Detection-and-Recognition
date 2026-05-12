@@ -148,7 +148,7 @@ def integrate_circle_shape(circle_cnt, shape_cnts):
             if best_shape_cnt is None or cv2.contourArea(cnt) > cv2.contourArea(best_shape_cnt):
                 best_shape_cnt = cnt
 
-    # prefer polygon — only fall back to circle if nothing classified
+    # prefer polygon
     if best_shape_cnt is not None:
         return best_shape_cnt, classify_contour(best_shape_cnt)
 
