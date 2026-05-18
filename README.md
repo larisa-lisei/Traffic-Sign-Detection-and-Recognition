@@ -81,8 +81,52 @@ Folderul `DATA/` conține datele folosite pentru antrenare, testare și demonstr
 - Matplotlib
 
 
+## Instalare și rulare
+
+### 1. Clonarea proiectului
+
+```bash
+git clone https://github.com/SVA-2026/sva-project-echipa3_1409a.git
+cd sva-project-echipa3_1409a
+```
+
+### 2. Crearea mediului virtual
+
+```bash
+python -m venv .venv
+```
+
+Activarea mediului virtual:
+
+**Windows:**
+
+```bash
+.venv\Scripts\activate
+```
+
+**Linux:**
+
+```bash
+source .venv/bin/activate
+```
+
+### 3. Instalarea dependențelor
+
+```bash
+pip install opencv-python numpy scikit-learn matplotlib pandas
+```
+
+### 4. Rularea proiectului
+
+Din folderul principal al proiectului, se rulează:
+
+```bash
+python code/__init__.py
+```
+
 ## Pipeline-ul aplicației
 
+![Pipeline](documentation/pipeline.jpg)
 
 ## Dataset
 
@@ -93,3 +137,66 @@ Datele au fost împărțite separat pentru fiecare clasă:
 - 20% pentru testare
 
 Această împărțire permite păstrarea unei distribuții echilibrate a claselor în ambele seturi.
+
+## Forme detectate
+
+Deși clasificarea finală se face pe 43 de clase, după indicatoare specifice, sistemul folosește patru categorii geometrice principale:
+
+- Cerc
+- Patrulater
+- Triunghi
+- Octogon
+
+## Rezultate
+
+Modelul final a obținut următoarele rezultate:
+
+| Metrică | Rezultat |
+|---|---|
+| Acuratețe | 0.8951 |
+| Eroare de clasificare | 0.1049 |
+| Eroare medie pătratică | 8.5588 |
+
+Rezultatele per formă au fost:
+
+| Formă | Hits | Total |
+|---|---:|---:|
+| Cerc | 421 | 452 |
+| Patrulater | 19 | 24 |
+| Triunghi | 49 | 69 |
+| Octogon | 6 | 8 |
+
+Matricea de confuzie pentru cele 43 de clase:
+
+![Confusion Matrix](documentation/confusion_matrix.png)
+
+## Analiza modelului SVM
+
+Au fost testate mai multe configurații pentru clasificatorul SVM. Cea mai bună configurație a fost obținută folosind:
+
+- Kernel: RBF
+- C: 100
+- Gamma: 0.001
+- Acuratețe: 0.9186
+
+## Limitări
+
+Sistemul poate avea dificultăți în următoarele situații:
+
+- imagini cu iluminare slabă;
+- indicatoare parțial obturate;
+- forme sau culori foarte asemănătoare între clase;
+- obiecte irelevante care nu sunt eliminate corect în etapa de segmentare;
+- clase slab reprezentate în dataset.
+
+## Posibile îmbunătățiri
+
+- Echilibrarea dataset-ului pentru toate clasele
+- Adăugarea mai multor imagini pentru clasele cu puține exemple
+- Integrarea unui model deep learning
+- Îmbunătățirea segmentării pentru condiții dificile de iluminare
+
+## Concluzie
+
+Proiectul demonstrează că indicatoarele rutiere pot fi recunoscute eficient prin combinarea metodelor clasice de computer vision cu un clasificator SVM. Cele mai bune rezultate au fost obținute pentru indicatoarele circulare, iar principalele limitări apar în cazul imaginilor dificile sau al claselor cu aspect vizual similar.
+
