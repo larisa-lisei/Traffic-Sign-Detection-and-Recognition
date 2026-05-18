@@ -5,6 +5,7 @@ import random
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+from sklearn.model_selection import StratifiedKFold, GridSearchCV
 
 from code.preprocessing import preprocess
 from code.shape import detect_shapes, encode_shape, encode_color
@@ -41,7 +42,7 @@ def collect_data(data_dir, train_ratio=0.8):
         # all images from current class
         files = [
             f for f in os.listdir(class_dir)
-            if f.lower().endswith((".jpg", ".jpeg", ".png"))
+            if f.lower().endswith((".jpg", ".jpeg", ".png", ".ppm"))
         ]
 
         # shuffle class images
@@ -108,6 +109,7 @@ def collect_data(data_dir, train_ratio=0.8):
         np.array(y_test, dtype=np.int32)
     )
 
+
 def train_svm(x, y, model_path="trained_svm.pkl", kernel='rbf', C=100, gamma=0.001):
     print('Training SVM...')
 
@@ -128,9 +130,9 @@ def train_svm(x, y, model_path="trained_svm.pkl", kernel='rbf', C=100, gamma=0.0
 
     return svm, scaler
 
-'''
-def train_svm(x, y, model_path="trained_svm.pkl"):
-    print('Training SVM...')
+
+def evaluate_params(x, y, model_path="trained_svm.pkl"):
+    print('Evaluating SVM parameters...')
 
     if len(x) == 0:
         raise ValueError("No training data found.")
@@ -148,16 +150,14 @@ def train_svm(x, y, model_path="trained_svm.pkl"):
     }
 
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    grid = GridSearchCV(
-        SVC(class_weight='balanced'),
-        param_grid,
-        cv=cv,
-        scoring='accuracy',
-        verbose=2
-    )
+    grid = GridSearchCV(SVC(class_weight='balanced'), param_grid, cv=cv, scoring='accuracy', verbose=2)
     grid.fit(x_scaled, y)
 
-    print(f"Best params: {grid.best_params_}")
+    results = grid.cv_results_
+    for mean, params in zip(results["mean_test_score"], results["params"]):
+        print(f"\nAccuracy: {mean:.4f} -> {params}")
+
+    print(f"\n\nBest params: {grid.best_params_}")
     print(f"Best CV accuracy: {grid.best_score_:.4f}")
 
     best_svm = grid.best_estimator_
@@ -166,7 +166,6 @@ def train_svm(x, y, model_path="trained_svm.pkl"):
         pickle.dump({"svm": best_svm, "scaler": scaler}, f)
 
     return best_svm, scaler
-'''
 
 def load_class_names(csv_path):
     """Load class ID → sign name mapping."""

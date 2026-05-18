@@ -289,8 +289,15 @@ def detect_shapes_color_video(mask, img_shape):
     return results
 
 
+def is_valid_contour(cnt, mask):
+    area = cv2.contourArea(cnt)
+    if area > 600 and area < 8000:
+        return False
+
+    return canny_contour_in_mask(cnt, mask)
+
+
 def detect_shapes_video(img):
-    output = img.copy()
     all_features = []
 
     canny_results = detect_shapes_canny_video(img)
@@ -304,7 +311,7 @@ def detect_shapes_video(img):
             combined.append((cnt, shape))
 
         for cnt, shape in canny_results:
-            if canny_contour_in_mask(cnt, mask):
+            if is_valid_contour(cnt, mask):
                 combined.append((cnt, shape))
 
         for cnt, shape in combined:
@@ -328,6 +335,6 @@ def detect_shapes_video(img):
                 "bbox": cv2.boundingRect(cnt)
             })
 
-            cv2.drawContours(output, [cnt], -1, (0, 255, 0), 2)
+            #cv2.drawContours(img, [cnt], -1, (0, 255, 0), 2)
 
-    return output, all_features
+    return all_features

@@ -25,7 +25,7 @@ ClassId,Name,Shape
 23,Keep left,circle
 24,Keep right,circle
 25,Roundabout,circle
-26,One way traffic,square
+26,One way traffic,quadrilateral
 27,Zebra crossing,quadrilateral
 28,Priority over oncoming vehicles,quadrilateral
 29,Bend to left,triangle

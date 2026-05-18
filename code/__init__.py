@@ -55,7 +55,7 @@ def demo_video(video_path, svm, scaler, class_templates, output_path=None):
             break
 
         img = histogram_equalization(frame)
-        annotated, all_features = detect_shapes_video(img)
+        all_features = detect_shapes_video(img)
 
         if all_features:
             x = np.array([feature_vector(det) for det in all_features], dtype=np.float32)
@@ -63,7 +63,7 @@ def demo_video(video_path, svm, scaler, class_templates, output_path=None):
             print(confidence)
 
             for i, (det, pred_label) in enumerate(zip(all_features, predicted)):
-                if confidence[i] < 0.2:
+                if confidence[i] < 0.3:
                     continue
 
                 template = class_templates.get(int(pred_label))
@@ -72,7 +72,7 @@ def demo_video(video_path, svm, scaler, class_templates, output_path=None):
                     bx, by, bw, bh = det["bbox"]
 
                     # draw bounding box
-                    cv2.rectangle(annotated, (bx, by), (bx + bw, by + bh), (0, 255, 0), 2)
+                    cv2.rectangle(img, (bx, by), (bx + bw, by + bh), (0, 255, 0), 2)
 
                     # draw template next to the box
                     if template is not None:
@@ -81,7 +81,7 @@ def demo_video(video_path, svm, scaler, class_templates, output_path=None):
                         x2 = bx + bw + 10
                         y2 = by
 
-                        h_frame, w_frame = annotated.shape[:2]
+                        h_frame, w_frame = img.shape[:2]
 
                         # avoid going outside frame
                         if x2 + 100 > w_frame:
@@ -89,10 +89,10 @@ def demo_video(video_path, svm, scaler, class_templates, output_path=None):
                         if y2 + 100 > h_frame:
                             y2 = h_frame - 100
 
-                        annotated[y2:y2 + 100, x2:x2 + 100] = sign_img
+                        img[y2:y2 + 100, x2:x2 + 100] = sign_img
 
         # resize back to original dimensions before writing
-        out_frame = cv2.resize(annotated, (w, h))
+        out_frame = cv2.resize(img, (w, h))
 
         cv2.imshow("Demo", out_frame)
 
@@ -117,8 +117,9 @@ def main():
     TRAIN_DIR = os.path.join(DIR, 'TRAIN')
     LABELS = os.path.join(DIR, 'labels.csv')
 
-    VIDEO = os.path.join(DIR, 'demo.mp4')
-    svm, scaler = load_svm(MODEL)
+    VIDEO = os.path.join(DIR, 'demo3.mp4')
+
+    #svm, scaler = load_svm(MODEL)
     classes = load_class_names(LABELS)
     class_templates = load_label_templates(TRAIN_DIR, classes)
 
@@ -128,7 +129,7 @@ def main():
     x_train, y_train, x_test, y_test = collect_data(TRAIN_DIR, 0.8)
 
     # Train
-    # svm, scaler = train_svm(x_train, y_train, model_path=MODEL)
+    svm, scaler = train_svm(x_train, y_train, model_path=MODEL)
 
     # Test
     '''
