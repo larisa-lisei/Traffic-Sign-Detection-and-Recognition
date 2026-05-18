@@ -120,7 +120,7 @@ def train_svm(x, y, model_path="trained_svm.pkl", kernel='rbf', C=100, gamma=0.0
     scaler = StandardScaler()
     x_scaled = scaler.fit_transform(x)
 
-    svm = SVC(C=C, gamma=gamma, kernel=kernel, class_weight='balanced')
+    svm = SVC(C=C, gamma=gamma, kernel=kernel, class_weight='balanced', probability=True)
     svm.fit(x_scaled, y)
 
     with open(model_path, 'wb') as f:
@@ -168,6 +168,17 @@ def train_svm(x, y, model_path="trained_svm.pkl"):
     return best_svm, scaler
 '''
 
+def load_class_names(csv_path):
+    """Load class ID → sign name mapping."""
+    class_names = {}
+    with open(csv_path, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            class_id = int(row['ClassId'])
+            # adjust column name to match your CSV
+            name = row.get('Name') or row.get('SignName') or row.get('Shape')
+            class_names[class_id] = name
+    return class_names
 
 # -------------------- GET TRAINED MODEL --------------------
 def load_svm(model_path="trained_svm.pkl"):
@@ -176,12 +187,14 @@ def load_svm(model_path="trained_svm.pkl"):
     return data["svm"], data["scaler"]
 
 
-def predict_svm(svm, x, scaler=None):
-    if x is None or len(x) == 0:
-        return []
-    if scaler is not None:
-        x = scaler.transform(x)
-    return svm.predict(x)
+def predict_svm(svm, X, scaler):
+    X = scaler.transform(X)
+
+    probs = svm.predict_proba(X)
+    predicted = np.argmax(probs, axis=1)
+    confidence = np.max(probs, axis=1)
+
+    return predicted, confidence
 
 def load_class_shapes(csv_path):
     class_to_shape = {}

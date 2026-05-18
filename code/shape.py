@@ -210,6 +210,7 @@ def compute_iou(box1, box2):
 
     return inter / union
 
+
 # -------------------- DETECT SHAPES --------------------
 def detect_shapes(img):
     output = img.copy()
@@ -242,8 +243,91 @@ def detect_shapes(img):
             "color": color,
             "features": features,
             "roi": roi,
+            "bbox": cv2.boundingRect(final_cnt)
         })
 
         cv2.drawContours(output, [final_cnt], -1, (0, 255, 0), 2)
+
+    return output, all_features
+
+
+
+def detect_shapes_canny_video(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    edges, _ = auto_canny(gray)
+
+    edge_cnts = find_contours(edges)
+
+    results = []
+
+    for cnt in edge_cnts:
+        shape = classify_contour(cnt)
+        if shape is not None:
+            results.append((cnt, shape))
+
+    return results
+
+
+def detect_shapes_color_video(mask, img_shape):
+    circles = detect_circle(mask)
+    circle_cnt = hough_to_contour(circles, img_shape)
+
+    color_cnts = find_contours(mask)
+
+    results = []
+
+    # polygons
+    for cnt in color_cnts:
+        shape = classify_contour(cnt)
+        if shape is not None:
+            results.append((cnt, shape))
+
+    # circle fallback
+    if circle_cnt is not None:
+        results.append((circle_cnt, "circle"))
+
+    return results
+
+
+def detect_shapes_video(img):
+    output = img.copy()
+    all_features = []
+
+    canny_results = detect_shapes_canny_video(img)
+    masks = get_color_masks(img)
+
+    for color, mask in masks.items():
+        color_results = detect_shapes_color_video(mask, img.shape)
+
+        combined = []
+        for cnt, shape in color_results:
+            combined.append((cnt, shape))
+
+        for cnt, shape in canny_results:
+            if canny_contour_in_mask(cnt, mask):
+                combined.append((cnt, shape))
+
+        for cnt, shape in combined:
+
+            if shape == "circle":
+                (x, y), r = cv2.minEnclosingCircle(cnt)
+                result = extract_features_from_circle(img, int(x), int(y), int(r))
+            else:
+                result = extract_features_from_contour(img, cnt)
+
+            if result is None:
+                continue
+
+            features, roi = result
+
+            all_features.append({
+                "shape": shape,
+                "color": color,
+                "features": features,
+                "roi": roi,
+                "bbox": cv2.boundingRect(cnt)
+            })
+
+            cv2.drawContours(output, [cnt], -1, (0, 255, 0), 2)
 
     return output, all_features
