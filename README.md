@@ -140,7 +140,7 @@ Această împărțire permite păstrarea unei distribuții echilibrate a claselo
 
 ## Forme detectate
 
-Deși clasificarea finală se face pe 43 de clase, după indicatoare specifice, sistemul folosește patru categorii geometrice principale:
+Deși clasificarea finală se face pe 43 de clase, după indicatoar e specifice, sistemul folosește patru categorii geometrice principale:
 
 - Cerc
 - Patrulater
