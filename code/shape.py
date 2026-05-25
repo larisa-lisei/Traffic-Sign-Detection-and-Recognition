@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from skimage.io import imshow
 
 from code.color import get_color_masks
 from code.descriptors import extract_features_from_circle, extract_features_from_contour
@@ -32,23 +33,27 @@ def find_contours(mask):
 
 # -------------------- CANNY EDGE DETECTION --------------------
 def auto_canny(img, method='otsu', sigma=0.33):
-    # blur before canny to suppress noise
-    blurred = cv2.GaussianBlur(img, (5, 5), 0)
-
     if method == "median":
-        Th = np.median(blurred)
+        Th = np.median(img)
     elif method == "triangle":
-        Th, _ = cv2.threshold(blurred, 0, 255, cv2.THRESH_TRIANGLE)
+        Th, _ = cv2.threshold(img, 0, 255, cv2.THRESH_TRIANGLE)
     elif method == "otsu":
-        Th, _ = cv2.threshold(blurred, 0, 255, cv2.THRESH_OTSU)
+        Th, _ = cv2.threshold(img, 0, 255, cv2.THRESH_OTSU)
     else:
         raise Exception("method specified not available!")
 
     lowTh = (1 - sigma) * Th
     highTh = (1 + sigma) * Th
 
-    edges = cv2.Canny(blurred, lowTh, highTh)
-    return edges, highTh
+    edges = cv2.Canny(img, lowTh, highTh)
+
+    #cv2.imshow("Canny edges", edges)
+
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+    edges_closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+
+
+    return edges_closed, highTh
 
 # -------------------- HOUGH TRANSFORM CIRCLES --------------------
 def detect_circle(mask):
@@ -68,7 +73,7 @@ def detect_circle(mask):
 
 def classify_contour(cnt):
     area = cv2.contourArea(cnt)
-    if area < 1000:
+    if area < 3000:
         return None
 
     peri = cv2.arcLength(cnt, True)
@@ -95,8 +100,9 @@ def classify_contour(cnt):
 
         return "quadrilateral"
 
-    if v == 8:
+    if 6 <= v <= 10:
         return "octagon"
+
     return None
 
 def hough_to_contour(circles, shape):
@@ -158,19 +164,26 @@ def integrate_circle_shape(circle_cnt, shape_cnts):
     return None, None
 
 
-def canny_contour_in_mask(cnt, mask, threshold=0.2):
+def canny_contour_in_mask(cnt, mask, threshold=0.15):
     # check if enough of the canny contour pixels fall within the color mask
     cnt_mask = np.zeros(mask.shape[:2], dtype=np.uint8)
-    cv2.drawContours(cnt_mask, [cnt], -1, 255, -1)  # filled contour
+    cv2.drawContours(cnt_mask, [cnt], -1, 255, 2)  # thickness=2
 
-    overlap = cv2.bitwise_and(cnt_mask, mask)
+    #cv2.imshow(f"Cnt {cnt}", cnt_mask)
 
-    cnt_area = cv2.contourArea(cnt)
-    if cnt_area == 0:
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+    dilated_mask = cv2.dilate(mask, kernel, iterations=1)
+
+    overlap = cv2.bitwise_and(cnt_mask, dilated_mask)
+
+    cnt_pixels = np.count_nonzero(cnt_mask)
+
+    if cnt_pixels == 0:
         return False
 
-    overlap_area = np.count_nonzero(overlap)
-    ratio = overlap_area / cnt_area
+    overlap_pixels = np.count_nonzero(overlap)
+
+    ratio = overlap_pixels / cnt_pixels
 
     return ratio > threshold
 
@@ -180,35 +193,38 @@ def integrate_edge_color(canny_result, color_result, mask):
     canny_cnt, canny_shape = canny_result
     color_cnt, color_shape = color_result
 
-    # color mask found something
-    if color_cnt is not None and color_shape is not None:
-        return color_cnt, color_shape
+    # Validate canny belongs to this color region
+    canny_valid = (
+        canny_cnt is not None
+        and canny_shape is not None
+        and canny_contour_in_mask(canny_cnt, mask)
+    )
+    color_valid = color_cnt is not None and color_shape is not None
 
-    # only if contour spatially belongs to this color
-    if canny_cnt is not None and canny_shape is not None:
-        if canny_contour_in_mask(canny_cnt, mask):
+    if canny_valid and color_valid:
+        canny_area = cv2.contourArea(canny_cnt)
+        color_area = cv2.contourArea(color_cnt)
+
+        # Prefer the larger contour
+        if canny_area > color_area * 1.2:
             return canny_cnt, canny_shape
 
+        # If areas are similar, prefer a more complex shape (more vertices)
+        canny_verts = len(cv2.approxPolyDP(canny_cnt, 0.03 * cv2.arcLength(canny_cnt, True), True))
+        color_verts = len(cv2.approxPolyDP(color_cnt, 0.03 * cv2.arcLength(color_cnt, True), True))
+
+        if canny_verts > color_verts:
+            return canny_cnt, canny_shape
+
+        return color_cnt, color_shape
+
+    if canny_valid:
+        return canny_cnt, canny_shape
+
+    if color_valid:
+        return color_cnt, color_shape
+
     return None, None
-
-def compute_iou(box1, box2):
-    x1, y1, w1, h1 = box1
-    x2, y2, w2, h2 = box2
-
-    xa = max(x1, x2)
-    ya = max(y1, y2)
-
-    xb = min(x1 + w1, x2 + w2)
-    yb = min(y1 + h1, y2 + h2)
-
-    inter = max(0, xb - xa) * max(0, yb - ya)
-
-    union = w1*h1 + w2*h2 - inter
-
-    if union == 0:
-        return 0
-
-    return inter / union
 
 
 # -------------------- DETECT SHAPES --------------------

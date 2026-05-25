@@ -63,7 +63,7 @@ def demo_video(video_path, svm, scaler, class_templates, output_path=None):
             print(confidence)
 
             for i, (det, pred_label) in enumerate(zip(all_features, predicted)):
-                if confidence[i] < 0.3:
+                if confidence[i] < 0.6:
                     continue
 
                 template = class_templates.get(int(pred_label))
@@ -129,12 +129,12 @@ def main():
     x_train, y_train, x_test, y_test = collect_data(TRAIN_DIR, 0.8)
 
     # Train
-    svm, scaler = train_svm(x_train, y_train, model_path=MODEL)
+    #svm, scaler = train_svm(x_train, y_train, model_path=MODEL)
 
     # Test
-    '''
-    svm = load_svm(MODEL)
-    predicted = predict_svm(svm, x_test, scaler)
+
+    svm, scaler = load_svm(MODEL)
+    predicted, confidence = predict_svm(svm, x_test, scaler)
 
     # Evaluation metrics
     classes = load_class_shapes(os.path.join(DIR, 'labels.csv'))
@@ -149,13 +149,14 @@ def main():
             print(f"real={real}, pred={pred}")
 
     classification_error(y_test, predicted)
-    '''
+
 
     '''
-    img = preprocess(cv2.imread(os.path.join(TRAIN_DIR, '40/40_012.png')))
+    img = preprocess(cv2.imread(os.path.join(TRAIN_DIR, '41/41_005.png')))
     cv2.imshow('img', img)
 
     shape, features = detect_shapes(img)
+
     cv2.imshow("Shape detection", shape)
 
     for i, item in enumerate(features):
@@ -165,7 +166,6 @@ def main():
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     '''
-
 
 if __name__ == '__main__':
     main()

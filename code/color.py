@@ -27,8 +27,8 @@ def get_color_masks(img):
     upper_yellow = np.array([35, 255, 255])
 
     # BLUE
-    lower_blue = np.array([100, 120, 50])
-    upper_blue = np.array([130, 255, 200])
+    lower_blue = np.array([90, 50, 50])
+    upper_blue = np.array([140, 255, 255])
 
     # MASK
     mask_red = (cv2.inRange(img_hsv, lower_red1, upper_red1) |

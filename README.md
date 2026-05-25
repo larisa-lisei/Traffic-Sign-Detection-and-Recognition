@@ -153,18 +153,18 @@ Modelul final a obținut următoarele rezultate:
 
 | Metrică | Rezultat |
 |---|---|
-| Acuratețe | 0.8951 |
-| Eroare de clasificare | 0.1049 |
-| Eroare medie pătratică | 8.5588 |
+| Acuratețe | 0.9804 |
+| Eroare de clasificare | 0.0195 |
+| Eroare medie pătratică | 1.4080 |
 
 Rezultatele per formă au fost:
 
 | Formă | Hits | Total |
-|---|---:|---:|
-| Cerc | 421 | 452 |
-| Patrulater | 19 | 24 |
-| Triunghi | 49 | 69 |
-| Octogon | 6 | 8 |
+|---|-----:|------:|
+| Cerc |  562 |   566 |
+| Patrulater |   44 |    46 |
+| Triunghi |  136 |   145 |
+| Octogon |   10 |    10 |
 
 Matricea de confuzie pentru cele 43 de clase:
 
@@ -177,7 +177,7 @@ Au fost testate mai multe configurații pentru clasificatorul SVM. Cea mai bună
 - Kernel: RBF
 - C: 100
 - Gamma: 0.001
-- Acuratețe: 0.9186
+- Acuratețe: 0.9804
 
 ## Limitări
 
@@ -191,12 +191,15 @@ Sistemul poate avea dificultăți în următoarele situații:
 
 ## Posibile îmbunătățiri
 
-- Echilibrarea dataset-ului pentru toate clasele
+- ``Echilibrarea dataset-ului pentru toate clasele
 - Adăugarea mai multor imagini pentru clasele cu puține exemple
 - Integrarea unui model deep learning
-- Îmbunătățirea segmentării pentru condiții dificile de iluminare
+- Îmbunătățirea segmentării pentru condiții dificile de iluminare``
 
 ## Concluzie
 
-Proiectul demonstrează că indicatoarele rutiere pot fi recunoscute eficient prin combinarea metodelor clasice de computer vision cu un clasificator SVM. Cele mai bune rezultate au fost obținute pentru indicatoarele circulare, iar principalele limitări apar în cazul imaginilor dificile sau al claselor cu aspect vizual similar.
+Proiectul demonstrează că indicatoarele rutiere pot fi recunoscute eficient prin 
+combinarea metodelor clasice de computer vision cu un clasificator SVM. 
+Principalele limitări apar în detecția indicatoarelor (sunt detectate și alte obiecte
+daca au forme sau culori asemănătoare indicatoarelor)
 
