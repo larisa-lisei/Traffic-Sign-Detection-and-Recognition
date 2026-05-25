@@ -60,7 +60,7 @@ def demo_video(video_path, svm, scaler, class_templates, output_path=None):
         if all_features:
             x = np.array([feature_vector(det) for det in all_features], dtype=np.float32)
             predicted, confidence = predict_svm(svm, x, scaler)
-            print(confidence)
+            #print(confidence)
 
             for i, (det, pred_label) in enumerate(zip(all_features, predicted)):
                 if confidence[i] < 0.6:
@@ -100,7 +100,7 @@ def demo_video(video_path, svm, scaler, class_templates, output_path=None):
         if writer:
             writer.write(out_frame)
 
-        if cv2.waitKey(50) & 0xFF == ord('q'):
+        if cv2.waitKey(5) & 0xFF == ord('q'):
             break
 
     cap.release()
@@ -117,24 +117,24 @@ def main():
     TRAIN_DIR = os.path.join(DIR, 'TRAIN')
     LABELS = os.path.join(DIR, 'labels.csv')
 
-    VIDEO = os.path.join(DIR, 'demo3.mp4')
+    VIDEO = os.path.join(DIR, 'demo_final.mp4')
 
-    #svm, scaler = load_svm(MODEL)
+    svm, scaler = load_svm(MODEL)
     classes = load_class_names(LABELS)
     class_templates = load_label_templates(TRAIN_DIR, classes)
 
-    #demo_video(VIDEO, svm, scaler, class_templates, output_path=os.path.join(DIR, 'output.mp4'))
+    demo_video(VIDEO, svm, scaler, class_templates, output_path=os.path.join(DIR, 'output.mp4'))
 
 
-    x_train, y_train, x_test, y_test = collect_data(TRAIN_DIR, 0.8)
+    #x_train, y_train, x_test, y_test = collect_data(TRAIN_DIR, 0.8)
 
     # Train
     #svm, scaler = train_svm(x_train, y_train, model_path=MODEL)
 
     # Test
-
-    svm, scaler = load_svm(MODEL)
-    predicted, confidence = predict_svm(svm, x_test, scaler)
+    '''
+    svm = load_svm(MODEL)
+    predicted = predict_svm(svm, x_test, scaler)
 
     # Evaluation metrics
     classes = load_class_shapes(os.path.join(DIR, 'labels.csv'))
@@ -149,14 +149,13 @@ def main():
             print(f"real={real}, pred={pred}")
 
     classification_error(y_test, predicted)
-
+    '''
 
     '''
-    img = preprocess(cv2.imread(os.path.join(TRAIN_DIR, '41/41_005.png')))
+    img = preprocess(cv2.imread(os.path.join(TRAIN_DIR, '40/40_012.png')))
     cv2.imshow('img', img)
 
     shape, features = detect_shapes(img)
-
     cv2.imshow("Shape detection", shape)
 
     for i, item in enumerate(features):
@@ -166,6 +165,7 @@ def main():
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     '''
+
 
 if __name__ == '__main__':
     main()
